@@ -23,8 +23,12 @@ import json
 # from flask import Flask
 from flask import request, Flask, jsonify
 app = Flask(__name__)
-UPLOAD_FOLDER = '/uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+# pip install flask
+# UPLOAD_FOLDER = '/uploads'
+# app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+isLocalHost=False #False in prod
+
 
 # def getUserVideoLikesWithVideoDescription():
 #     # fetchUrl="http://localhost/shortnot/api/admin/getAllVideoWatchWithLikeAndVideoData"
@@ -191,6 +195,7 @@ app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 
 def getVideoRankingForUser(userId,videoCollection,limit):
 
+    print("Starting Ranking")
     model = tf.saved_model.load('weights')
 
     # videoCollection = getUserVideoLikesWithVideoDescription()
@@ -200,7 +205,7 @@ def getVideoRankingForUser(userId,videoCollection,limit):
     userId = int(userId)
     
     rating_data = pd.DataFrame([t for t in videoCollection])
-    print(rating_data.head())
+    # print(rating_data.head())
     rating_data['user_id'] = rating_data.user_id.astype(np.int64)
     rating_data['video_id'] = rating_data.id.astype(np.int64)
     rating_data['video_description'] = rating_data.description.astype(np.str)
@@ -260,9 +265,13 @@ def getVideoRankingForUser(userId,videoCollection,limit):
 
     sortedList =sorted(test_ratings.items(), key=lambda x:x[1]['rating'], reverse=True)
     returnData =list(map(lambda x:x[1]['data'],sortedList))[0:limit]
-    for b in sortedList:
-        print("sorted",b) 
-        # exit()                       
+
+    if(isLocalHost):
+        for b in sortedList:
+            print("sorted",b) 
+            # exit()
+    else:
+        print("returnData length",len(returnData))                       
     return returnData  
 
 # trainVideoRanking()

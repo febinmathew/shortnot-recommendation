@@ -7,6 +7,7 @@ import pandas as pd
 
 import tensorflow as tf
 # pip install tensorflow
+# pip install tensorflow-cpu
 
 # import tensorflow_datasets as tfds
 import tensorflow_recommenders as tfrs
@@ -24,11 +25,14 @@ import json
 # from flask import request, Flask, jsonify
 # app = Flask(__name__)
 
-startFreshTrain=True
-isLocalServer=True
+startFreshTrain=False
+isLocalHost=True
 
 def getUserVideoLikesWithVideoDescription():
-    fetchUrl="http://localhost/shortnot/api/admin/getAllVideoWatchWithLikeAndVideoData"
+    
+    # fetchUrl="http://localhost/shortnot/api/admin/getAllVideoWatchWithLikeAndVideoData"
+    fetchUrl="https://shortnot.returnbyte.com/api/admin/getAllVideoWatchWithLikeAndVideoData" 
+
     headers = {"Api-Key": "156c4675-9608-4591-1111-00000","User-Id":"25","Auth-Token":"yOy7KJMyCzAwYlIndsEF42G_pkITf88NR_meJF7enror2gMenKU5Pf27fNX2OG_0vpr0muNDrRDS6RcJhcAEiQ=="}
             
     x = requests.post(fetchUrl,headers=headers, data = {})
@@ -36,7 +40,7 @@ def getUserVideoLikesWithVideoDescription():
     # return [{'id': 8, 'user_id': 2, 'fb_id': '', 'description': '#seavibes #funtime #sunset', 'video': 'https://firebasestorage.googleapis.com/v0/b/toktok-db796.appspot.com/o/post_data%2F2%2F2022_8_18%2F62fe371983d4b2.mp4?alt=media&token=e57b52f2-9899-43fa-8744-f29291bcb5b4', 'thum': 'https://firebasestorage.googleapis.com/v0/b/toktok-db796.appspot.com/o/post_data%2F2%2F2022_8_18%2F62fe371983d4b2.png?alt=media&token=3b9ac204-efec-4e3f-9cf5-fa3d66e80eea', 'gif': 'https://firebasestorage.googleapis.com/v0/b/toktok-db796.appspot.com/o/post_data%2F2%2F2022_8_18%2F62fe371983d4b2.gif?alt=media&token=c9d518a0-a7f9-42ac-a002-df72ca33dcb7', 'view': 123, 'section': '0', 'sound_id': 0, 'privacy_type': 'public', 'allow_comments': 'true', 'allow_duet': 0, 'block': 0, 'duet_video_id': 0, 'old_video_id': 0, 'duration': 20, 'created': '2022-08-18T12:56:57+00:00', 'sound': None, 'user': {'id': 2, 'first_name': 'Febin', 'last_name': 'Mathew', 'gender': '', 'bio': '', 'website': '', 'dob': '1983-08-06T00:00:00+00:00', 'social_id': '', 'email': '', 'phone': '+919633323461', 'password': '', 'profile_pic': 'app/webroot/uploads/images/6301bfe4d9003.png', 'role': 'user', 'username': 'febz', 'social': '', 'device_token': '', 'token': '', 'active': 1, 'lat': '', 'long': '', 'online': 0, 'verified': 0, 'auth_token': '', 'version': '2.2', 'device': 'android', 'ip': '103.154.54.172', 'city': 'kozhikode', 'country': 'india', 'city_id': 132600, 'state_id': 4028, 'country_id': 101, 'fb_id': '', 'created': '2022-08-06T11:31:58+00:00', 'push_notification': {'id': 2, 'likes': 1, 'comments': 1, 'new_followers': 1, 'mentions': 1, 'direct_messages': 1, 'video_updates': 1}, 'privacy_setting': {'id': 2, 'videos_download': 1, 'direct_message': 'everyone', 'duet': 'everyone', 'liked_videos': 'me', 'video_comment': 'everyone'}}}]
 
 def trainVideoRanking():
-    global startFreshTrain
+    global startFreshTrain,isLocalHost
     videoCollection = getUserVideoLikesWithVideoDescription()
     
     rating_data = pd.DataFrame([t for t in videoCollection])
@@ -170,11 +174,13 @@ def trainVideoRanking():
             return self.task(labels=video_rating, predictions=rating_predictions)
 
     
-    model = VideoModel()
+    
 
     if(not startFreshTrain):
         model = tf.saved_model.load('weights')
-    
+    else:
+        model = VideoModel()
+
     model.compile(optimizer=tf.keras.optimizers.Adagrad(learning_rate=0.1))
     # Cache the dataset 
     cached_train = dataset.cache()
@@ -195,11 +201,13 @@ def trainVideoRanking():
     # model.evaluate(cached_test , return_dict=True)
 
 def uploadModelToSever():
-    if (isLocalServer):
+    if (not isLocalHost):
         url='http://127.0.0.1:43657/uploadModelFiles'
     else:    
-        url='https://shortnot.returnbyte.com:43657/uploadModelFiles'
+        url='http://shortnot.returnbyte.com:43657/uploadModelFiles'
 
+
+    print("Pushing model to:",url)
 
     filePath='weights/saved_model.pb'
     with open(filePath, 'rb') as f:
