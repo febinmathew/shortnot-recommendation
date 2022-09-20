@@ -282,7 +282,7 @@ def getVideoRankingForUser(userId,videoCollection,limit):
 @app.route('/getRecommendationForVideos', methods=[ 'POST'])
 def getrecommendation():
     request_data = request.get_json()
-    print(request_data)
+    # print(request_data)
     # exit()
     # content =  request.get_json()
     userId = request_data['userId']
