@@ -208,7 +208,7 @@ def getVideoRankingForUser(userId,videoCollection,limit):
     # print(rating_data.head())
     rating_data['user_id'] = rating_data.user_id.astype(np.int64)
     rating_data['video_id'] = rating_data.id.astype(np.int64)
-    rating_data['video_description'] = rating_data.description.astype(np.str)
+    rating_data['video_description'] = rating_data.description.astype(str)
     # rating_data['video_rating'] = rating_data.video_rating.astype(np.float32)
    
     # Create array with users id in every place on the lenght of the unique books number
